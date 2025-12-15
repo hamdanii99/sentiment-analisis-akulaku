@@ -2,12 +2,26 @@ import streamlit as st
 import pandas as pd
 import joblib
 import re
+import os
+
+st.set_page_config(
+    page_title="Analisis Sentimen Akulaku",
+    page_icon="💬",
+    layout="wide"
+)
+
+st.title("💬 Analisis Sentimen Akulaku")
 
 # =========================
-# LOAD MODEL
+# LOAD MODEL (AMAN)
 # =========================
-tfidf = joblib.load("tfidf.pkl")
-model = joblib.load("model_nb.pkl")
+try:
+    tfidf = joblib.load("tfidf.pkl")
+    model = joblib.load("model_nb.pkl")
+except Exception as e:
+    st.error("❌ Model gagal dimuat")
+    st.code(str(e))
+    st.stop()
 
 # =========================
 # PREPROCESSING
