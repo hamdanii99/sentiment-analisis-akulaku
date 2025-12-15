@@ -1,6 +1,20 @@
-import streamlit as st
+import pandas as pd
+import joblib
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
 
-st.set_page_config(page_title="TEST", layout="wide")
-st.title("✅ Streamlit Berjalan Normal")
+df = pd.read_csv("dataset_akulaku_balanced.csv")
 
-st.write("Jika halaman ini muncul, berarti ERROR ADA DI MODEL (.pkl)")
+X = df["text"].astype(str)
+y = df["label"]
+
+tfidf = TfidfVectorizer(max_features=5000)
+X_tfidf = tfidf.fit_transform(X)
+
+model = MultinomialNB()
+model.fit(X_tfidf, y)
+
+joblib.dump(tfidf, "tfidf.pkl")
+joblib.dump(model, "model_nb.pkl")
+
+print("MODEL BERHASIL DISIMPAN")
