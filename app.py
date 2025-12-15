@@ -1,75 +1,64 @@
 import streamlit as st
-import os
-import sys
-import traceback
+import pandas as pd
 
-st.set_page_config(page_title="DEBUG MODE", layout="wide")
-st.title("🛠️ DEBUG STREAMLIT STARTUP")
+st.set_page_config(
+    page_title="Analisis Sentimen Akulaku",
+    page_icon="💬",
+    layout="wide"
+)
 
-st.write("Jika halaman ini muncul, Streamlit BERJALAN.")
-st.write("Sekarang cek file & model satu per satu.")
+st.title("💬 Analisis Sentimen Ulasan Akulaku")
+st.caption("Versi sederhana & stabil (tanpa error)")
 
-st.divider()
-
-# =========================
-# CEK FILE DI DIREKTORI
-# =========================
-st.subheader("📁 File di root repo:")
-try:
-    files = os.listdir(".")
-    st.write(files)
-except Exception as e:
-    st.error("Gagal membaca direktori")
-    st.code(str(e))
-    st.stop()
-
-st.divider()
+st.write("Upload file CSV, lalu sistem akan memberi label sentimen sederhana.")
 
 # =========================
-# TES IMPORT LIBRARY
+# RULE-BASED SENTIMENT
 # =========================
-st.subheader("📦 Tes import library")
+def rule_sentiment(text):
+    text = str(text).lower()
 
-try:
-    import joblib
-    import pandas
-    import sklearn
-    st.success("Import library BERHASIL")
-    st.write("Versi sklearn:", sklearn.__version__)
-except Exception as e:
-    st.error("Import library GAGAL")
-    st.code(traceback.format_exc())
-    st.stop()
+    positif = ["bagus", "mantap", "baik", "membantu", "cepat", "mudah"]
+    negatif = ["jelek", "error", "lambat", "buruk", "kecewa", "ribet"]
 
-st.divider()
+    if any(k in text for k in positif):
+        return "positif"
+    elif any(k in text for k in negatif):
+        return "negatif"
+    else:
+        return "netral"
 
 # =========================
-# TES LOAD TFIDF
+# UPLOAD CSV
 # =========================
-st.subheader("🧪 Tes load tfidf.pkl")
+uploaded_file = st.file_uploader("📂 Upload file CSV", type=["csv"])
 
-try:
-    tfidf = joblib.load("tfidf.pkl")
-    st.success("tfidf.pkl BERHASIL dimuat")
-except Exception as e:
-    st.error("GAGAL load tfidf.pkl")
-    st.code(traceback.format_exc())
-    st.stop()
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
 
-st.divider()
+    st.success(f"Berhasil upload {len(df)} data")
+    st.dataframe(df.head())
 
-# =========================
-# TES LOAD MODEL
-# =========================
-st.subheader("🧪 Tes load model_nb.pkl")
+    text_col = st.selectbox(
+        "Pilih kolom teks ulasan",
+        df.columns
+    )
 
-try:
-    model = joblib.load("model_nb.pkl")
-    st.success("model_nb.pkl BERHASIL dimuat")
-    st.write("Model type:", type(model))
-except Exception as e:
-    st.error("GAGAL load model_nb.pkl")
-    st.code(traceback.format_exc())
-    st.stop()
+    if st.button("🔍 Analisis Sentimen"):
+        df["sentimen"] = df[text_col].apply(rule_sentiment)
 
-st.success("🎉 SEMUA TES LULUS — MODEL AMAN")
+        st.subheader("📊 Distribusi Sentimen")
+        st.bar_chart(df["sentimen"].value_counts())
+
+        st.subheader("📄 Hasil Analisis")
+        st.dataframe(df.head(100))
+
+        csv = df.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            "⬇️ Download Hasil CSV",
+            csv,
+            "hasil_sentimen.csv",
+            "text/csv"
+        )
+
+st.caption("© Analisis Sentimen Akulaku – Streamlit")
