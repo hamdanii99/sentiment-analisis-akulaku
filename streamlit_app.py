@@ -4,61 +4,34 @@ import pandas as pd
 st.set_page_config(
     page_title="Analisis Sentimen Akulaku",
     page_icon="💬",
-    layout="wide"
+    layout="centered"
 )
 
-st.title("💬 Analisis Sentimen Ulasan Akulaku")
-st.caption("Versi sederhana & stabil (tanpa error)")
+st.title("💬 Analisis Sentimen Akulaku")
+st.write("Versi stabil (anti error Streamlit Cloud)")
 
-st.write("Upload file CSV, lalu sistem akan memberi label sentimen sederhana.")
-
-# =========================
-# RULE-BASED SENTIMENT
-# =========================
 def rule_sentiment(text):
     text = str(text).lower()
 
-    positif = ["bagus", "mantap", "baik", "membantu", "cepat", "mudah"]
-    negatif = ["jelek", "error", "lambat", "buruk", "kecewa", "ribet"]
-
-    if any(k in text for k in positif):
+    if any(k in text for k in ["bagus", "baik", "mantap", "cepat", "puas"]):
         return "positif"
-    elif any(k in text for k in negatif):
+    if any(k in text for k in ["jelek", "error", "lambat", "kecewa"]):
         return "negatif"
-    else:
-        return "netral"
+    return "netral"
 
-# =========================
-# UPLOAD CSV
-# =========================
-uploaded_file = st.file_uploader("📂 Upload file CSV", type=["csv"])
+uploaded_file = st.file_uploader("📂 Upload CSV", type="csv")
 
-if uploaded_file is not None:
+if uploaded_file:
     df = pd.read_csv(uploaded_file)
-
-    st.success(f"Berhasil upload {len(df)} data")
+    st.write("Preview data:")
     st.dataframe(df.head())
 
-    text_col = st.selectbox(
-        "Pilih kolom teks ulasan",
-        df.columns
-    )
+    col = st.selectbox("Pilih kolom teks", df.columns)
 
-    if st.button("🔍 Analisis Sentimen"):
-        df["sentimen"] = df[text_col].apply(rule_sentiment)
+    df["sentimen"] = df[col].apply(rule_sentiment)
 
-        st.subheader("📊 Distribusi Sentimen")
-        st.bar_chart(df["sentimen"].value_counts())
+    st.write("Hasil analisis:")
+    st.dataframe(df)
 
-        st.subheader("📄 Hasil Analisis")
-        st.dataframe(df.head(100))
-
-        csv = df.to_csv(index=False).encode("utf-8")
-        st.download_button(
-            "⬇️ Download Hasil CSV",
-            csv,
-            "hasil_sentimen.csv",
-            "text/csv"
-        )
-
-st.caption("© Analisis Sentimen Akulaku – Streamlit")
+    st.write("Jumlah sentimen:")
+    st.write(df["sentimen"].value_counts())
